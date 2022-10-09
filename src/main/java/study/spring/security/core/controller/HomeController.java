@@ -4,38 +4,52 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Slf4j
-@RestController
+@Controller
 public class HomeController {
 
-    @RequestMapping(value = "/")
-    public String index() {
-        return "home page";
+    @GetMapping("/")
+    public String main(){
+        return "index";
     }
 
-    @RequestMapping("/auth")
-    public Authentication auth() {
+    @GetMapping("/login")
+    public String login(){
+        return "loginForm";
+    }
+
+    @GetMapping("/login-error")
+    public String loginError(Model model){
+        model.addAttribute("loginError", true);
+        return "loginForm";
+    }
+
+    @GetMapping("/access-denied")
+    public String accessDenied(){
+        return "AccessDenied";
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_USER')")
+    @GetMapping("/user-page")
+    public String userPage(){
+        return "UserPage";
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
+    @GetMapping("/admin-page")
+    public String adminPage(){
+        return "AdminPage";
+    }
+
+
+    @ResponseBody
+    @GetMapping("/auth")
+    public Authentication auth(){
         return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    @PreAuthorize(value = "hasAnyAuthority('ROLE_USER')")
-    @RequestMapping(value = "/user")
-    public SecurityMessage user() {
-        return SecurityMessage.builder()
-                .auth(SecurityContextHolder.getContext().getAuthentication())
-                .message("user 정보")
-                .build();
-    }
-
-    @PreAuthorize(value = "hasAnyAuthority('ROLE_ADMIN')")
-    @RequestMapping(value = "/admin")
-    public SecurityMessage admin() {
-        return SecurityMessage.builder()
-                .auth(SecurityContextHolder.getContext().getAuthentication())
-                .message("admin 정보")
-                .build();
     }
 }

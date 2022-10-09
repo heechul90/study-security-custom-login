@@ -1,8 +1,11 @@
 package study.spring.security.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,7 +20,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity(debug = true)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
 public class SecurityConfiguration {
+
+    private final CustomAuthDetail customAuthDetail;
 
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
@@ -39,14 +45,30 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeRequests()
-                .mvcMatchers("/").permitAll()
+                .antMatchers("/").permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().defaultSuccessUrl("/", false)
+                .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/loginprocess")
+                .permitAll()
+                .defaultSuccessUrl("/", false)
+                .failureUrl("/login-error")
+                .authenticationDetailsSource(customAuthDetail)
                 .and()
-                .httpBasic()
+                .logout()
+                .logoutSuccessUrl("/")
+                .and()
+                .exceptionHandling().accessDeniedPage("/access-denied")
                 .and()
                 .build();
+    }
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+        roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
+        return roleHierarchy;
     }
 
     @Bean
@@ -56,7 +78,7 @@ public class SecurityConfiguration {
                         PathRequest.toStaticResources().atCommonLocations()
                 )
                 .antMatchers(
-                        "/site/css"
+                        "/lib/*", "/resources/*"
                 )
         );
     }
