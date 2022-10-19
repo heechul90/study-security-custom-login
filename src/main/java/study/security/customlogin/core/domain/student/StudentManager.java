@@ -22,7 +22,6 @@ public class StudentManager implements AuthenticationProvider, InitializingBean 
             Student student = studentDB.get(token.getCredentials());
             return StudentAuthenticationToken.builder()
                     .principal(student)
-                    .credentials(null)
                     .details(student.getUsername())
                     .authenticated(true)
                     .authorities(student.getRole())

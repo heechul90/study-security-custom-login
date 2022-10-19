@@ -23,7 +23,6 @@ public class TeacherManager implements AuthenticationProvider, InitializingBean 
             Teacher teacher = teacherDB.get(token.getCredentials());
             return TeacherAuthenticationToken.builder()
                     .principal(teacher)
-                    .credentials(null)
                     .details(teacher.getUsername())
                     .authenticated(true)
                     .authorities(teacher.getRole())
